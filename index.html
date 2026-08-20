@@ -437,34 +437,42 @@ $("#to").innerHTML=`<b>${gap}d</b> · ${NEXT.m}`;
 const WIN=innerWidth<660?56:91;
 const dates=Array.from({length:WIN},(_,i)=>ad(ad(T,-(WIN-1)),i));
 const st=dates.map(kk), cs=new Set(CODE);
-const hits=st.filter(s=>cs.has(s)).length;
-let streak=0;
-for(let i=st.length-1;i>=0;i--){if(cs.has(st[i]))streak++;else if(i!==st.length-1)break}
-const lastCode=Math.max(...CODE);
-const lastGap=Math.round((T-new Date(
-  String(lastCode).replace(/(\d{4})(\d{2})(\d{2})/,"$1-$2-$3")))/864e5);
-
 function iceDone(){return SUBJECTS.reduce((s,m)=>s+(m.acts?m.acts.filter(Boolean).length:0),0)}
 
-$("#figs").innerHTML=[
-  [Math.round(hits/WIN*100)+"%",WIN+" day rate"],
-  [streak,"day streak"],[283,"all time"],[iceDone()+"/12","activities"]
-].map(([v,k])=>`<div class="fig"><div class="v">${v}</div><div class="k mono">${k}</div></div>`).join("");
+function drawPractice(){
+  const cs=new Set(LANES[0].days);
+  const hits=st.filter(s=>cs.has(s)).length;
+  streak=0;
+  for(let i=st.length-1;i>=0;i--){
+    if(cs.has(st[i])) streak++; else if(i!==st.length-1) break;
+  }
+  lastGap=LANES[0].days.length
+    ? Math.round((T-new Date(String(Math.max(...LANES[0].days))
+        .replace(/(\d{4})(\d{2})(\d{2})/,"$1-$2-$3")))/864e5)
+    : 0;
 
-const wk=[];
-for(let i=0;i<WIN;i+=7){const sl=st.slice(i,i+7);wk.push(sl.filter(s=>cs.has(s)).length/sl.length)}
-const pts=wk.map((v,i)=>[(i/(wk.length-1))*100,40-(v*34)-3]);
-$("#spark").setAttribute("viewBox","0 0 100 40");
-$("#spark").innerHTML=
-  `<path d="${pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ")}"/>`+
-  `<circle cx="${pts.at(-1)[0]}" cy="${pts.at(-1)[1]}" r="2"/>`;
+  $("#figs").innerHTML=[
+    [Math.round(hits/WIN*100)+"%",WIN+" day rate"],
+    [streak,"day streak"],[283,"all time"],[iceDone()+"/12","activities"]
+  ].map(([v,k])=>`<div class="fig"><div class="v">${v}</div><div class="k mono">${k}</div></div>`).join("");
 
-$("#lanes").innerHTML=LANES.map(l=>{
-  const set=new Set(l.days), any=l.days.some(d=>st.includes(d));
-  return `<div class="lane${any?"":" off"}"><div class="nm mono">${l.n}</div>
-  <div class="gridl" style="grid-template-columns:repeat(${WIN},1fr)">`+
-  st.map(s=>`<div class="cell${set.has(s)?(s===kk(T)?" now":" on"):""}"></div>`).join("")+
-  `</div></div>`}).join("");
+  const wk=[];
+  for(let i=0;i<WIN;i+=7){const sl=st.slice(i,i+7);wk.push(sl.filter(s=>cs.has(s)).length/sl.length)}
+  const pts=wk.map((v,i)=>[(i/(wk.length-1))*100,40-(v*34)-3]);
+  $("#spark").setAttribute("viewBox","0 0 100 40");
+  $("#spark").innerHTML=
+    `<path d="${pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ")}"/>`+
+    `<circle cx="${pts.at(-1)[0]}" cy="${pts.at(-1)[1]}" r="2"/>`;
+
+  $("#lanes").innerHTML=LANES.map(l=>{
+    const set=new Set(l.days), any=l.days.some(d=>st.includes(d));
+    return `<div class="lane${any?"":" off"}"><div class="nm mono">${l.n}</div>
+    <div class="gridl" style="grid-template-columns:repeat(${WIN},1fr)">`+
+    st.map(s=>`<div class="cell${set.has(s)?(s===kk(T)?" now":" on"):""}"></div>`).join("")+
+    `</div></div>`}).join("");
+}
+let streak=0, lastGap=0;
+drawPractice();
 
 /* ---------------- session line ---------------- */
 function sessionLine(g=gap){
@@ -569,12 +577,23 @@ $("#send").onclick=async()=>{
 
 /* ---------------- live data ---------------- */
 (async()=>{
-  const [m,d,s,r] = await Promise.all([
+  const [m,d,s,r,p] = await Promise.all([
     sbGet("mail_summary","select=*&order=captured_at.desc&limit=1"),
     sbGet("dumps","select=*,dump_replies(body)&order=captured_at.desc&limit=40"),
     sbGet("subjects","select=*&order=code"),
-    sbGet("runs","select=*&order=ran_at.desc&limit=1")
+    sbGet("runs","select=*&order=ran_at.desc&limit=1"),
+    sbGet("practice","select=*&order=day.desc&limit=120")
   ]);
+
+  if(p&&p.length){
+    const key=x=>+x.day.replace(/-/g,"");
+    LANES[0].days=p.filter(x=>x.code).map(key);
+    LANES[1].days=p.filter(x=>x.raw).map(key);
+    LANES[2].days=p.filter(x=>x.tasks>0).map(key);
+    LANES[3].days=p.filter(x=>x.marks>0).map(key);
+    LANES[4].days=p.filter(x=>x.ship>0).map(key);
+    drawPractice();
+  }
 
   if(m&&m[0]){ MAIL={rows:m[0].rows,verdict:m[0].verdict}; drawMail(); }
 
