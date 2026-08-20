@@ -36,7 +36,7 @@ body{
   -webkit-font-smoothing:antialiased;
   transition:background .5s cubic-bezier(.32,.72,0,1),color .5s cubic-bezier(.32,.72,0,1);
 }
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+body::before{content:"";position:fixed;inset:0;z-index:4;pointer-events:none;
   opacity:var(--grain);mix-blend-mode:var(--blend);transition:opacity .5s ease;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E")}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;
@@ -44,11 +44,15 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 
 /* ===== app shell: two stacked screens, iOS push ===== */
 .screen{position:fixed;inset:0;z-index:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
-        overscroll-behavior:contain;
-        transition:transform .48s cubic-bezier(.32,.72,0,1),opacity .48s cubic-bezier(.32,.72,0,1)}
-#s2{transform:translateX(100%);opacity:.4}
-body.push #s1{transform:translateX(-24%);opacity:.5}
-body.push #s2{transform:translateX(0);opacity:1}
+        overscroll-behavior:contain;background:var(--paper);
+        transition:transform .48s cubic-bezier(.32,.72,0,1),
+                   opacity .48s cubic-bezier(.32,.72,0,1),
+                   visibility 0s linear .48s,
+                   background .5s cubic-bezier(.32,.72,0,1)}
+#s2{transform:translateX(100%);visibility:hidden;z-index:2;
+    box-shadow:-14px 0 40px rgba(0,0,0,.16)}
+body.push #s1{transform:translateX(-22%);opacity:.85}
+body.push #s2{transform:translateX(0);visibility:visible;transition-delay:0s}
 
 .pad{max-width:680px;margin:0 auto;
      padding:calc(20px + env(safe-area-inset-top)) 22px 132px}
@@ -224,7 +228,88 @@ body.push .dock{opacity:0;pointer-events:none}
 .btn:hover{background:var(--sunk)} .btn:active{transform:scale(.97)}
 .btn.pri{background:var(--pen);border-color:var(--pen);color:#fff}
 
+/* tooltip */
+.tip{position:fixed;z-index:45;pointer-events:none;padding:8px 11px;
+  background:var(--paper-2);border:1px solid var(--rule);
+  box-shadow:0 10px 30px rgba(0,0,0,.14);white-space:nowrap;
+  opacity:0;transform:translateY(4px);
+  transition:opacity .2s ease,transform .2s cubic-bezier(.32,.72,0,1)}
+.tip.on{opacity:1;transform:none}
+.tip .a{font-family:Spectral,Georgia,serif;font-size:14px}
+.tip .b{color:var(--ink-3);margin-top:2px;font-size:10px;
+  font-family:ui-monospace,Menlo,monospace;letter-spacing:.1em}
+
 .foot{padding-top:26px;color:var(--ink-3);line-height:1.85}
+
+/* ============ desktop only ============ */
+.wide{display:none}
+.inst{display:grid;gap:1px;background:var(--rule-soft);border:1px solid var(--rule-soft)}
+.inst3{grid-template-columns:repeat(3,1fr)}
+.inst2{grid-template-columns:1fr 1fr}
+.ip{background:var(--paper);padding:16px 16px 18px}
+.ip h5{font-family:Spectral,Georgia,serif;font-weight:500;font-size:14px;margin-bottom:1px}
+.ip .cap{color:var(--ink-3);margin-bottom:14px}
+.ip svg{width:100%;display:block;overflow:visible}
+.ip .num{font-family:Spectral,Georgia,serif;font-size:22px;line-height:1;
+         font-variant-numeric:tabular-nums;margin-top:12px}
+.ip .num s{text-decoration:none;color:var(--ink-3);font-size:11px;
+           font-family:ui-monospace,Menlo,monospace;letter-spacing:.14em;margin-left:7px}
+
+.ax{fill:var(--ink-3);font-family:ui-monospace,Menlo,monospace;font-size:6.5px;
+    letter-spacing:.1em}
+.gl{stroke:var(--rule-soft);stroke-width:.6}
+.sp{stroke:var(--ink-2);stroke-width:1.6;stroke-linecap:round}
+.sp.hot{stroke:var(--pen)}
+.fl{fill:var(--ink-2)} .fl.hot{fill:var(--pen)} .fl.dim{fill:var(--ink-3);opacity:.4}
+.st{stroke:var(--ink-2);stroke-width:1;fill:none}
+.bar2{fill:var(--ink-2)} .bar2.hot{fill:var(--pen)}
+
+/* term strip */
+.termw{position:relative;height:118px}
+.termw .base{position:absolute;left:0;right:0;bottom:24px;height:1px;background:var(--rule)}
+.mk{position:absolute;bottom:24px;width:1.5px;background:var(--ink-3);
+    transform-origin:50% 100%;transform:scaleY(0)}
+.in .mk{animation:gw .6s cubic-bezier(.32,.72,0,1) forwards}
+.mk .nib{position:absolute;top:-3px;left:50%;margin-left:-3px;width:6px;height:6px;
+         background:var(--ink);transition:transform .3s cubic-bezier(.34,1.4,.64,1)}
+.mk .nib.dia{transform:rotate(45deg)}
+.mk.hot,.mk.hot .nib{background:var(--pen)}
+.mk:hover .nib{transform:scale(1.7)}
+.mk::after{content:"";position:absolute;left:-10px;right:-10px;top:-12px;bottom:-24px}
+@keyframes gw{to{transform:scaleY(1)}}
+.nowl{position:absolute;bottom:24px;top:4px;width:1px;background:var(--margin);opacity:.5}
+.nowl b{position:absolute;bottom:-3.5px;left:-3px;width:7px;height:7px;border-radius:50%;
+        background:var(--margin)}
+.bind{position:absolute;bottom:14px;height:6px;border:1px solid var(--rule);border-top:0}
+.mo{position:absolute;bottom:0;color:var(--ink-3);transform:translateX(-1px)}
+
+/* run ticks */
+.ticks{display:flex;gap:3px;align-items:flex-end;height:30px}
+.tk{flex:1;background:var(--rule-soft);height:100%;transition:background .4s}
+.tk.ok{background:var(--ink-2)} .tk.bad{background:var(--margin)}
+.tk.gap{background:repeating-linear-gradient(-45deg,transparent 0 3px,var(--rule) 3px 4px)}
+
+@media (min-width:1080px){
+  html,body{overflow:auto}
+  .screen{position:static;inset:auto;overflow:visible;box-shadow:none;
+          transform:none!important;opacity:1!important}
+  #s2{display:none;visibility:visible}
+  body.push #s1{display:none}
+  body.push #s2{display:block}
+  .pad{max-width:1180px;padding:36px 44px 120px}
+  .pad::before{left:0}
+  .body{padding-left:26px}
+  .wide{display:block}
+  .cols{display:grid;grid-template-columns:1fr 380px;gap:0 44px;align-items:start}
+  .cols .blk{padding-top:0}
+  .figs{gap:44px}
+  .fig .v{font-size:32px}
+  .dock{bottom:30px}
+}
+@media (min-width:1400px){
+  .pad{max-width:1320px}
+  .cols{grid-template-columns:1fr 440px}
+}
 
 @media (min-width:700px){ .rail{right:calc(50% - 400px)} }
 @media (prefers-reduced-motion:reduce){
@@ -254,26 +339,96 @@ body.push .dock{opacity:0;pointer-events:none}
 
   <p class="session rv" id="session"></p>
 
-  <div class="blk rv">
-    <div class="lbl mono">Subjects</div>
-    <div class="ledger">
-      <div class="lhead mono">
-        <span></span><span>Activities</span><span></span><span class="r">Marks</span><span></span>
+  <div class="blk rv wide">
+    <div class="lbl mono">Instruments</div>
+    <div class="inst inst3">
+      <div class="ip">
+        <h5>When you dump</h5>
+        <div class="cap mono">By hour, all captures</div>
+        <svg id="clock" viewBox="0 0 130 130"></svg>
       </div>
-      <div id="ledger"></div>
-      <div class="lfoot mono"><span id="icefoot"></span><span id="mkfoot"></span></div>
+      <div class="ip">
+        <h5>How long you last</h5>
+        <div class="cap mono">Consecutive coding days</div>
+        <svg id="runs" viewBox="0 0 130 96"></svg>
+        <div class="num" id="runsnum"></div>
+      </div>
+      <div class="ip">
+        <h5>Which days</h5>
+        <div class="cap mono">Rate by weekday</div>
+        <svg id="dow" viewBox="0 0 130 96"></svg>
+        <div class="num" id="downum"></div>
+      </div>
     </div>
   </div>
 
-  <div class="blk rv">
-    <div class="lbl mono">Dumps</div>
-    <div id="dumps"></div>
+  <div class="blk rv wide">
+    <div class="lbl mono">Term</div>
+    <div class="termw" id="termw"><div class="base"></div></div>
   </div>
 
-  <div class="blk rv">
-    <div class="lbl mono">Mail</div>
-    <div id="mail"></div>
-    <p class="verdict" id="verdict"></p>
+  <div class="cols">
+   <div>
+    <div class="blk rv">
+      <div class="lbl mono">Subjects</div>
+      <div class="ledger">
+        <div class="lhead mono">
+          <span></span><span>Activities</span><span></span><span class="r">Marks</span><span></span>
+        </div>
+        <div id="ledger"></div>
+        <div class="lfoot mono"><span id="icefoot"></span><span id="mkfoot"></span></div>
+      </div>
+    </div>
+
+    <div class="blk rv">
+      <div class="lbl mono">Dumps</div>
+      <div id="dumps"></div>
+    </div>
+   </div>
+
+   <div>
+    <div class="blk rv wide">
+      <div class="lbl mono">Banked</div>
+      <div class="inst">
+        <div class="ip">
+          <h5>Marks against the term</h5>
+          <div class="cap mono">Cumulative, out of 100</div>
+          <svg id="banked" viewBox="0 0 200 92"></svg>
+          <div class="num" id="bankednum"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="blk rv wide">
+      <div class="lbl mono">Turnaround</div>
+      <div class="inst">
+        <div class="ip">
+          <h5>Dump to answer</h5>
+          <div class="cap mono">Hours waiting, newest first</div>
+          <svg id="latency" viewBox="0 0 200 100"></svg>
+          <div class="num" id="latnum"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="blk rv wide">
+      <div class="lbl mono">Uptime</div>
+      <div class="inst">
+        <div class="ip">
+          <h5>Brief runs</h5>
+          <div class="cap mono">Last fourteen days</div>
+          <div class="ticks" id="ticks"></div>
+          <div class="num" id="ticknum"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="blk rv">
+      <div class="lbl mono">Mail</div>
+      <div id="mail"></div>
+      <p class="verdict" id="verdict"></p>
+    </div>
+   </div>
   </div>
 
   <div class="foot mono" id="foot"></div>
@@ -306,6 +461,7 @@ body.push .dock{opacity:0;pointer-events:none}
 </div>
 
 <div class="scrim" id="scrim"></div>
+<div class="tip" id="tip"></div>
 <div class="sheet" id="sheet">
   <h4>What's on your mind?</h4>
   <textarea id="txt" placeholder="Type it the way you'd say it."></textarea>
@@ -554,8 +710,256 @@ drawMail();
 $("#foot").innerHTML=(SB.url?"Live from Supabase":"Seed data, not yet connected")+
   "<br>Last written by the evening brief";
 
+/* ================= desktop instruments ================= */
+const WIDE = matchMedia("(min-width:1080px)").matches;
+const tip = $("#tip");
+function hover(node, a, b){
+  node.addEventListener("pointerenter", e=>{
+    tip.innerHTML=`<div class="a">${a}</div><div class="b">${b}</div>`;
+    tip.classList.add("on"); place(e);
+  });
+  node.addEventListener("pointermove", place);
+  node.addEventListener("pointerleave", ()=>tip.classList.remove("on"));
+}
+function place(e){
+  const r=tip.getBoundingClientRect();
+  tip.style.left=Math.max(8,Math.min(e.clientX-r.width/2,innerWidth-r.width-8))+"px";
+  tip.style.top=Math.max(8,e.clientY-r.height-14)+"px";
+}
+
+/* full term map — static coursework, edit when the calendar changes */
+const WORK=[
+  {m:"OPSC",t:"Submission",w:25,d:"2026-08-24"},
+  {m:"APPR",t:"Submission",w:25,d:"2026-08-26"},
+  {m:"XISD",t:"Submission",w:25,d:"2026-09-04"},
+  {m:"SQAT",t:"Submission",w:25,d:"2026-09-18"},
+  {m:"OPSC",t:"Submission",w:30,d:"2026-09-22"},
+  {m:"APPR",t:"Submission",w:30,d:"2026-09-25"},
+  {m:"SQAT",t:"Submission",w:30,d:"2026-10-16"},
+  {m:"XISD",t:"Task",      w:50,d:"2026-10-19"}
+];
+const A0=new Date("2026-08-16"), B0=new Date("2026-11-13"), SP0=(B0-A0)/864e5;
+const px0=iso=>((new Date(iso)-A0)/864e5/SP0)*100;
+const svgns="http://www.w3.org/2000/svg";
+const el=(n,a)=>{const e=document.createElementNS(svgns,n);
+  for(const k in a) e.setAttribute(k,a[k]); return e;};
+
+/* --- 1. radial clock: what hour you capture --- */
+function drawClock(hours){
+  const s=document.getElementById("clock"); if(!s) return;
+  s.innerHTML=""; const cx=65,cy=65,r0=22,rMax=52;
+  const max=Math.max(1,...hours);
+  s.appendChild(el("circle",{cx,cy,r:r0,class:"gl",fill:"none"}));
+  s.appendChild(el("circle",{cx,cy,r:rMax,class:"gl",fill:"none"}));
+  hours.forEach((v,h)=>{
+    const a=(h/24)*Math.PI*2 - Math.PI/2;
+    const len=r0 + (v/max)*(rMax-r0);
+    const ln=el("line",{x1:cx+Math.cos(a)*r0, y1:cy+Math.sin(a)*r0,
+      x2:cx+Math.cos(a)*len, y2:cy+Math.sin(a)*len,
+      class:"sp"+(v===max&&v>0?" hot":""), opacity:v?1:.14});
+    ln.style.strokeDasharray=len; ln.style.strokeDashoffset=len;
+    ln.style.animation=`dr .8s cubic-bezier(.32,.72,0,1) ${h*22}ms forwards`;
+    s.appendChild(ln);
+  });
+  [[0,"00"],[6,"06"],[12,"12"],[18,"18"]].forEach(([h,t])=>{
+    const a=(h/24)*Math.PI*2 - Math.PI/2;
+    const lb=el("text",{x:cx+Math.cos(a)*(rMax+9), y:cy+Math.sin(a)*(rMax+9)+2,
+      class:"ax","text-anchor":"middle"});
+    lb.textContent=t; s.appendChild(lb);
+  });
+}
+
+/* --- 2. streak run-length histogram --- */
+function drawRuns(days){
+  const s=document.getElementById("runs"); if(!s) return;
+  s.innerHTML="";
+  const sorted=[...days].sort((a,b)=>a-b);
+  const lens=[]; let run=1;
+  for(let i=1;i<sorted.length;i++){
+    const p=String(sorted[i-1]).replace(/(\d{4})(\d{2})(\d{2})/,"$1-$2-$3");
+    const c=String(sorted[i]).replace(/(\d{4})(\d{2})(\d{2})/,"$1-$2-$3");
+    if((new Date(c)-new Date(p))/864e5===1) run++;
+    else { lens.push(run); run=1; }
+  }
+  if(sorted.length) lens.push(run);
+  const bins=[0,0,0,0,0];
+  lens.forEach(l=>bins[Math.min(l,5)-1]++);
+  const max=Math.max(1,...bins), W=130,H=74, bw=W/5;
+  bins.forEach((v,i)=>{
+    const h=(v/max)*(H-10);
+    const rc=el("rect",{x:i*bw+4, y:H-h, width:bw-8, height:h,
+      class:"bar2"+(v===max?" hot":"")});
+    rc.style.transformOrigin=`0 ${H}px`; rc.style.transform="scaleY(0)";
+    rc.style.animation=`gw .6s cubic-bezier(.32,.72,0,1) ${i*70}ms forwards`;
+    s.appendChild(rc);
+    const t=el("text",{x:i*bw+bw/2, y:H+11, class:"ax","text-anchor":"middle"});
+    t.textContent=i===4?"5+":i+1; s.appendChild(t);
+  });
+  const longest=Math.max(0,...lens);
+  document.getElementById("runsnum").innerHTML=
+    `${longest}<s>longest run</s>`;
+}
+
+/* --- 3. weekday profile --- */
+function drawDow(days){
+  const s=document.getElementById("dow"); if(!s) return;
+  s.innerHTML="";
+  const hit=[0,0,0,0,0,0,0], tot=[0,0,0,0,0,0,0];
+  const set=new Set(days);
+  dates.forEach(d=>{ const w=(d.getDay()+6)%7; tot[w]++; if(set.has(kk(d))) hit[w]++; });
+  const rate=hit.map((h,i)=>tot[i]?h/tot[i]:0);
+  const max=Math.max(.01,...rate), W=130,H=74, bw=W/7;
+  const names=["M","T","W","T","F","S","S"];
+  rate.forEach((v,i)=>{
+    const h=(v/max)*(H-10);
+    const rc=el("rect",{x:i*bw+3.5, y:H-h, width:bw-7, height:Math.max(h,1),
+      class:"bar2"+(v===max&&v>0?" hot":"")});
+    rc.style.transformOrigin=`0 ${H}px`; rc.style.transform="scaleY(0)";
+    rc.style.animation=`gw .6s cubic-bezier(.32,.72,0,1) ${i*60}ms forwards`;
+    s.appendChild(rc);
+    const t=el("text",{x:i*bw+bw/2, y:H+11, class:"ax","text-anchor":"middle"});
+    t.textContent=names[i]; s.appendChild(t);
+  });
+  const best=rate.indexOf(Math.max(...rate));
+  const full=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  document.getElementById("downum").innerHTML=
+    `${Math.round(rate[best]*100)}%<s>on ${full[best]}s</s>`;
+}
+
+/* --- 4. term density strip --- */
+function drawTerm(){
+  const t=document.getElementById("termw"); if(!t) return;
+  t.querySelectorAll(".mk,.mo,.nowl,.bind").forEach(n=>n.remove());
+  const sorted=[...WORK].sort((a,b)=>a.d<b.d?-1:1);
+  const nxt=sorted.find(x=>new Date(x.d)>=T);
+  ["2026-09-01","2026-10-01","2026-11-01"].forEach(iso=>{
+    const e=document.createElement("div");
+    e.className="mo mono"; e.style.left=px0(iso)+"%";
+    e.textContent=new Date(iso).toLocaleDateString("en-GB",{month:"short"});
+    t.appendChild(e);
+  });
+  sorted.forEach((x,i)=>{
+    const b=document.createElement("div");
+    b.className="mk"+(x===nxt?" hot":"");
+    b.style.left=px0(x.d)+"%"; b.style.height=(x.w/50)*76+"px";
+    b.style.animationDelay=(i*55)+"ms";
+    b.innerHTML=`<span class="nib${x.t!=="Submission"?" dia":""}"></span>`;
+    hover(b,x.m,`${x.t} · ${x.w}% · `+
+      new Date(x.d).toLocaleDateString("en-GB",{day:"numeric",month:"short"}));
+    t.appendChild(b);
+  });
+  for(let i=0;i<sorted.length-1;i++){
+    if((new Date(sorted[i+1].d)-new Date(sorted[i].d))/864e5<=6){
+      const c=document.createElement("div"); c.className="bind";
+      c.style.left=px0(sorted[i].d)+"%";
+      c.style.width=(px0(sorted[i+1].d)-px0(sorted[i].d))+"%";
+      t.appendChild(c);
+    }
+  }
+  const n=document.createElement("div");
+  n.className="nowl"; n.style.left=px0(T.toISOString().slice(0,10))+"%";
+  n.innerHTML="<b></b>"; t.appendChild(n);
+}
+
+/* --- 5. banked marks against the term --- */
+function drawBanked(){
+  const s=document.getElementById("banked"); if(!s) return;
+  s.innerHTML="";
+  const W=200,H=76;
+  const sorted=[...WORK].sort((a,b)=>a.d<b.d?-1:1);
+  let cum=0;
+  const ceil=sorted.map(x=>{cum+=x.w; return {d:x.d,v:Math.min(cum,100)};});
+  const xs=iso=>((new Date(iso)-A0)/864e5/SP0)*W;
+  const ys=v=>H-(v/100)*(H-6);
+  let dCeil="M0 "+ys(0);
+  ceil.forEach(p=>{ dCeil+=` L${xs(p.d).toFixed(1)} ${ys(p.v-0).toFixed(1)}`;});
+  s.appendChild(el("path",{d:dCeil,class:"st",opacity:.3,"stroke-dasharray":"2 3"}));
+
+  const got=[];
+  SUBJECTS.forEach(su=>(su.got||[]).forEach(g=>got.push(g)));
+  const banked=got.reduce((a,g)=>a+g.w*g.mark/100,0);
+  if(got.length){
+    const p=el("path",{d:`M0 ${ys(0)} L${xs(T.toISOString().slice(0,10)).toFixed(1)} ${ys(banked)}`,
+      class:"st"}); p.style.stroke="var(--pen)"; s.appendChild(p);
+  }
+  const nowx=xs(T.toISOString().slice(0,10));
+  s.appendChild(el("line",{x1:nowx,y1:0,x2:nowx,y2:H,class:"gl"}));
+  s.appendChild(el("circle",{cx:nowx,cy:ys(banked),r:2.4,class:"fl hot"}));
+  const exposed=100-Math.round(banked);
+  document.getElementById("bankednum").innerHTML=
+    `${exposed}%<s>still exposed</s>`;
+}
+
+/* --- 6. dump turnaround --- */
+function drawLatency(rows){
+  const s=document.getElementById("latency"); if(!s) return;
+  s.innerHTML="";
+  const W=200, rowH=11, list=rows.slice(0,8);
+  const hrs=list.map(r=>r.answered_at
+    ? (new Date(r.answered_at)-new Date(r.captured_at))/36e5 : null);
+  const max=Math.max(12,...hrs.filter(Boolean));
+  s.setAttribute("viewBox",`0 0 ${W} ${list.length*rowH+14}`);
+  list.forEach((r,i)=>{
+    const y=i*rowH+6;
+    s.appendChild(el("line",{x1:0,y1:y,x2:W,y2:y,class:"gl"}));
+    if(hrs[i]==null){
+      const c=el("circle",{cx:4,cy:y,r:2.6,class:"fl"});
+      c.style.fill="var(--margin)"; s.appendChild(c);
+      const t=el("text",{x:11,y:y+2.5,class:"ax"});
+      t.textContent="waiting"; t.style.fill="var(--margin)"; s.appendChild(t);
+    }else{
+      const x2=Math.max(6,(hrs[i]/max)*W);
+      s.appendChild(el("line",{x1:4,y1:y,x2:x2,y2:y,class:"sp"}));
+      s.appendChild(el("circle",{cx:4,cy:y,r:2.2,class:"fl dim"}));
+      s.appendChild(el("circle",{cx:x2,cy:y,r:2.6,class:"fl"}));
+    }
+  });
+  const done=hrs.filter(h=>h!=null);
+  const med=done.length?done.sort((a,b)=>a-b)[Math.floor(done.length/2)]:0;
+  document.getElementById("latnum").innerHTML=
+    `${med<1?"<1":Math.round(med)}h<s>typical wait</s>`;
+}
+
+/* --- 7. run uptime ticks --- */
+function drawTicks(rows){
+  const box=document.getElementById("ticks"); if(!box) return;
+  const byDay={};
+  rows.forEach(r=>{
+    const d=new Date(r.ran_at).toISOString().slice(0,10);
+    byDay[d]=byDay[d]||{am:null,pm:null};
+    if(r.kind==="morning") byDay[d].am=r.ok;
+    if(r.kind==="evening") byDay[d].pm=r.ok;
+  });
+  let html="", ok=0, total=0;
+  for(let i=13;i>=0;i--){
+    const d=ad(T,-i).toISOString().slice(0,10);
+    const rec=byDay[d]||{};
+    ["am","pm"].forEach(k=>{
+      const v=rec[k]; total++;
+      if(v===true){ html+='<div class="tk ok"></div>'; ok++; }
+      else if(v===false) html+='<div class="tk bad"></div>';
+      else html+='<div class="tk gap"></div>';
+    });
+  }
+  box.innerHTML=html;
+  document.getElementById("ticknum").innerHTML=
+    `${Math.round(ok/total*100)}%<s>of runs landed</s>`;
+}
+
+function drawWide(dumpRows, runRows){
+  if(!WIDE) return;
+  const hours=new Array(24).fill(0);
+  (dumpRows||[]).forEach(r=>hours[new Date(r.captured_at).getHours()]++);
+  drawClock(hours);
+  drawRuns(LANES[0].days);
+  drawDow(LANES[0].days);
+  drawTerm();
+  drawBanked();
+  drawLatency(dumpRows||[]);
+  drawTicks(runRows||[]);
+}
 /* ---------------- navigation ---------------- */
-$("#todumps").onclick=()=>{document.body.classList.add("push");$("#s2").scrollTop=0};
+$("#todumps").onclick=()=>{document.body.classList.add("push");$("#s2").scrollTop=0;scrollTo(0,0)};
 $("#back").onclick=()=>document.body.classList.remove("push");
 addEventListener("keydown",e=>{if(e.key==="Escape")document.body.classList.remove("push")});
 
@@ -631,7 +1035,23 @@ $("#send").onclick=async()=>{
     (r&&r[0]?"Last written "+new Date(r[0].ran_at)
       .toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})
      :"No brief has run yet");
+
+  drawWide(d||SEED_TIMES, r||[]);
 })();
+
+/* capture times for the instruments before Supabase answers */
+const SEED_TIMES=[
+  {captured_at:"2026-08-17T11:32:00+02:00", answered_at:null},
+  {captured_at:"2026-08-17T00:59:00+02:00", answered_at:"2026-08-17T07:50:00+02:00"},
+  {captured_at:"2026-08-16T22:33:00+02:00", answered_at:"2026-08-17T07:50:00+02:00"},
+  {captured_at:"2026-08-16T13:45:00+02:00", answered_at:"2026-08-16T18:00:00+02:00"},
+  {captured_at:"2026-08-16T12:38:00+02:00", answered_at:"2026-08-16T18:00:00+02:00"},
+  {captured_at:"2026-08-16T04:01:00+02:00", answered_at:"2026-08-16T18:00:00+02:00"},
+  {captured_at:"2026-08-16T03:48:00+02:00", answered_at:"2026-08-16T18:00:00+02:00"},
+  {captured_at:"2026-08-16T03:30:00+02:00", answered_at:"2026-08-16T18:00:00+02:00"},
+  {captured_at:"2026-08-16T03:27:00+02:00", answered_at:"2026-08-16T18:00:00+02:00"}
+];
+drawWide(SEED_TIMES, []);
 
 /* ---------------- reveal ---------------- */
 const io=new IntersectionObserver(es=>es.forEach(e=>{
