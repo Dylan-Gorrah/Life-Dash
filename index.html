@@ -19,6 +19,7 @@
   --ink:#1E2024; --ink-2:#5D6068; --ink-3:#93959B;
   --rule:rgba(30,32,36,.12); --rule-soft:rgba(30,32,36,.06);
   --margin:#C0605A; --pen:#2F4B8F;
+  --amber:#A8763A; --green:#4A7350;
   --grain:.05; --blend:multiply;
 }
 [data-theme="dark"]{
@@ -26,6 +27,7 @@
   --ink:#E6E4DE; --ink-2:#9B9DA4; --ink-3:#61646B;
   --rule:rgba(230,228,222,.13); --rule-soft:rgba(230,228,222,.06);
   --margin:#9E4F4A; --pen:#7C9CE8;
+  --amber:#C79A57; --green:#6D9E74;
   --grain:.08; --blend:soft-light;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -172,7 +174,80 @@ body.push #s2{transform:translateX(0);visibility:visible;transition-delay:0s}
          font-weight:300;font-style:italic;color:var(--ink-2)}
 
 /* ===== controls ===== */
-.rail{position:fixed;z-index:30;right:16px;top:50%;transform:translateY(-50%)}
+/* notification dot */
+.flag{position:fixed;z-index:34;right:16px;top:calc(15px + env(safe-area-inset-top));
+  width:30px;height:30px;display:grid;place-items:center;cursor:pointer;
+  border:0;background:none;opacity:0;transform:scale(.6);pointer-events:none;
+  transition:opacity .45s ease,transform .5s cubic-bezier(.34,1.4,.64,1)}
+.flag.on{opacity:1;transform:none;pointer-events:auto}
+.flag i{width:8px;height:8px;border-radius:50%;background:var(--ink-3);
+  transition:background .4s ease,box-shadow .4s ease}
+.flag.act    i{background:var(--pen);   box-shadow:0 0 0 5px color-mix(in srgb,var(--pen) 16%,transparent)}
+.flag.read   i{background:var(--amber); box-shadow:0 0 0 5px color-mix(in srgb,var(--amber) 16%,transparent)}
+.flag.good   i{background:var(--green); box-shadow:0 0 0 5px color-mix(in srgb,var(--green) 16%,transparent)}
+.flag.act i{animation:fp 2.8s ease-in-out infinite}
+@keyframes fp{0%,100%{transform:scale(1)}50%{transform:scale(.72)}}
+.flag:active{transform:scale(.86)}
+
+/* a dump that came from replying to Blip */
+.d.frm{padding-left:13px;border-left:2px solid var(--margin);margin-left:-15px;
+       padding-left:13px}
+.d.frm .top{color:var(--margin)}
+.d.frm .quoted{font-family:Spectral,Georgia,serif;font-size:13.5px;font-style:italic;
+  color:var(--ink-3);margin-bottom:7px;padding-left:11px;
+  border-left:1px solid var(--rule-soft);line-height:1.5}
+
+.rail{position:fixed;z-index:32;right:14px;top:50%;transform:translateY(-50%)}
+.blip{position:relative;width:78px;height:78px;cursor:pointer;
+  transition:transform .5s cubic-bezier(.32,.72,0,1);
+  -webkit-user-select:none;user-select:none;touch-action:manipulation}
+.blip:active{transform:scale(.93)}
+.blip:focus-visible{outline:2px solid var(--pen);outline-offset:6px;border-radius:50%}
+.blip #avatar{width:100%;height:100%;pointer-events:none}
+.blip .halo{position:absolute;inset:-9px;border-radius:50%;border:1px solid var(--rule);
+  opacity:0;transform:scale(.86);pointer-events:none;
+  transition:opacity .45s ease,transform .5s cubic-bezier(.32,.72,0,1),border-color .4s}
+.blip.awake .halo{opacity:1;transform:scale(1)}
+.blip.alert .halo{border-color:var(--margin);animation:ha 2.6s ease-in-out infinite}
+@keyframes ha{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(1.05)}}
+
+/* speech */
+.say{position:fixed;z-index:33;right:104px;top:50%;transform:translateY(-50%);
+  width:min(330px,calc(100vw - 132px));pointer-events:none}
+.say.on{pointer-events:auto}
+.bub{background:var(--paper-2);border:1px solid var(--rule);padding:15px 16px 13px;
+  box-shadow:0 16px 44px rgba(0,0,0,.20);position:relative;
+  opacity:0;transform:translateX(10px) scale(.97);transform-origin:right center;
+  transition:opacity .34s ease,transform .44s cubic-bezier(.32,.72,0,1)}
+.say.on .bub{opacity:1;transform:none}
+.bub::after{content:"";position:absolute;right:-6px;top:50%;margin-top:-5px;
+  width:10px;height:10px;background:var(--paper-2);
+  border-right:1px solid var(--rule);border-top:1px solid var(--rule);
+  transform:rotate(45deg)}
+.bub .who{display:flex;justify-content:space-between;color:var(--ink-3);margin-bottom:9px}
+.bub .txt{font-family:Spectral,Georgia,serif;font-weight:300;font-size:15.5px;
+  line-height:1.5;margin:0}
+.bub .hint{margin-top:11px;padding-top:9px;border-top:1px solid var(--rule-soft);
+  color:var(--ink-3);opacity:.7;transition:color .3s,opacity .3s}
+.bub.held .hint{color:var(--pen);opacity:1}
+.bub .prog{position:absolute;left:0;bottom:0;height:2px;background:var(--pen);
+  width:0;transition:width .05s linear}
+
+@media (max-width:1079px){
+  .rail{right:10px}
+  .blip{width:58px;height:58px}
+  .say{right:76px;width:min(300px,calc(100vw - 100px))}
+}
+@media (max-width:520px){
+  .blip{width:50px;height:50px}
+  .say{right:0;left:0;top:auto;bottom:96px;transform:none;
+       width:auto;margin:0 16px}
+  .bub{transform:translateY(10px) scale(.98);transform-origin:bottom center}
+  .bub::after{right:26px;top:auto;bottom:-6px;margin-top:0;
+    transform:rotate(135deg)}
+}
+body.push .rail,body.push .say{opacity:0;pointer-events:none;transition:opacity .3s}
+
 .icb{background:var(--paper-2);border:1px solid var(--rule);color:var(--ink-2);
      width:38px;height:38px;display:grid;place-items:center;cursor:pointer;
      border-radius:50%;box-shadow:0 6px 20px rgba(0,0,0,.10);
@@ -216,6 +291,9 @@ body.push .dock{opacity:0;pointer-events:none}
   transition:transform .5s cubic-bezier(.32,.72,0,1)}
 .sheet.on{transform:translate(-50%,0)}
 .sheet h4{font-family:Spectral,Georgia,serif;font-weight:400;font-size:18px;margin-bottom:13px}
+.sheet .quoted{font-family:Spectral,Georgia,serif;font-weight:300;font-size:14px;
+  font-style:italic;color:var(--ink-2);line-height:1.55;margin:-4px 0 13px;
+  padding-left:13px;border-left:2px solid var(--margin)}
 .sheet textarea{width:100%;min-height:110px;resize:vertical;background:var(--sunk);
   border:1px solid var(--rule);color:var(--ink);padding:12px;
   font:400 15px/1.55 inherit;outline:none;transition:border-color .3s}
@@ -311,7 +389,7 @@ body.push .dock{opacity:0;pointer-events:none}
   .cols{grid-template-columns:1fr 440px}
 }
 
-@media (min-width:700px){ .rail{right:calc(50% - 400px)} }
+@media (min-width:700px) and (max-width:1079px){ .rail{right:20px} }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
   .rv{opacity:1;transform:none} .pad::before{transform:scaleY(1)}
@@ -441,9 +519,23 @@ body.push .dock{opacity:0;pointer-events:none}
   <div id="alldumps"></div>
 </div></div></div>
 
-<!-- ============ CONTROLS ============ -->
-<div class="rail">
-  <button class="icb" id="tog" aria-label="Switch theme"><svg id="ico" viewBox="0 0 24 24"></svg></button>
+<button class="flag" id="flag" aria-label="Mail status"><i></i></button>
+
+<!-- ============ BLIP ============ -->
+<div class="rail" id="rail">
+  <div class="blip" id="blip" role="button" tabindex="0"
+       aria-label="Blip. Double tap for what it has noticed.">
+    <div id="avatar"></div>
+    <i class="halo" id="halo"></i>
+  </div>
+</div>
+
+<div class="say" id="say" aria-live="polite">
+  <div class="bub" id="bub">
+    <div class="who mono"><span id="saystate"></span><span id="saynum"></span></div>
+    <p class="txt" id="saytxt"></p>
+    <div class="hint mono" id="sayhint">Hold to reply</div>
+  </div>
 </div>
 
 <button class="icb back" id="back" aria-label="Back">
@@ -451,6 +543,8 @@ body.push .dock{opacity:0;pointer-events:none}
 </button>
 
 <div class="dock">
+  <button class="go" id="tog" aria-label="Switch theme"><svg id="ico" viewBox="0 0 24 24"></svg></button>
+  <div class="sep"></div>
   <button id="newdump">
     <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Dump</span>
   </button>
@@ -463,7 +557,8 @@ body.push .dock{opacity:0;pointer-events:none}
 <div class="scrim" id="scrim"></div>
 <div class="tip" id="tip"></div>
 <div class="sheet" id="sheet">
-  <h4>What's on your mind?</h4>
+  <h4 id="sheeth">What's on your mind?</h4>
+  <p class="quoted" id="sheetq" style="display:none"></p>
   <textarea id="txt" placeholder="Type it the way you'd say it."></textarea>
   <div class="acts">
     <span class="hint mono" id="hint">Goes straight to Brain</span>
@@ -504,6 +599,17 @@ async function sbPost(table, body){
       method:"POST",
       headers:{...HEAD(), "Content-Type":"application/json", Prefer:"return=representation"},
       body:JSON.stringify(body)});
+    return r.ok ? await r.json() : null;
+  }catch{ return null; }
+}
+
+async function sbRpc(fn, args){
+  if(!SB.url) return null;
+  try{
+    const r = await fetch(`${SB.url}/rest/v1/rpc/${fn}`,{
+      method:"POST",
+      headers:{...HEAD(), "Content-Type":"application/json"},
+      body:JSON.stringify(args)});
     return r.ok ? await r.json() : null;
   }catch{ return null; }
 }
@@ -561,7 +667,8 @@ let DUMPS=[
 let MAIL={ rows:[
   {label:"Security alerts",n:9},{label:"Sign-in codes",n:4},
   {label:"Newsletters",n:3},{label:"Job alerts",n:1},{label:"Receipts",n:1}],
-  verdict:"Nothing in there needs you, and nothing from the college." };
+  verdict:"Nothing in there needs you, and nothing from the college.",
+  action:"none" };
 
 /* ---------------- helpers ---------------- */
 const $=s=>document.querySelector(s);
@@ -582,7 +689,10 @@ function paint(){
   $("#ico").innerHTML=dark?SUN:MOON;
   document.querySelector('meta[name=theme-color]').content=dark?"#141518":"#E9E7E0";
 }
-paint(); $("#tog").onclick=()=>{dark=!dark;paint()};
+paint(); $("#tog").onclick=()=>{
+  dark=!dark; paint();
+  if(DEF && blip){ tintBlip(DEF); try{ blip.play(blipState||"idle"); }catch{} }
+};
 
 /* ---------------- strip ---------------- */
 $("#stamp").textContent=T.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
@@ -667,9 +777,10 @@ drawLedger();
 /* ---------------- dumps ---------------- */
 const CHEV='<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
 function card(d,withReply){
-  return `<div class="d${d.wait?" wait":""}" data-id="${d.id}">
+  return `<div class="d${d.wait?" wait":""}${d.frm?" frm":""}" data-id="${d.id}">
     <div class="hd"><div class="top mono"><span>${d.at}</span><span>${d.k}</span>
       <span class="chev">${CHEV}</span></div>
+    ${d.quote?`<p class="quoted">${d.quote}</p>`:""}
     <p class="sum">${d.sum}</p></div>
     <div class="more"><p>${d.more}</p>
       ${d.reply?`<div class="mine"><b>You said</b>${d.reply}</div>`:""}
@@ -688,13 +799,17 @@ function drawDumps(){
     const btn=el.querySelector(".reply .btn");
     if(btn) btn.onclick=async()=>{
       const ta=el.querySelector("textarea"), v=ta.value.trim();
-      if(!v) return;
+      if(!v || btn.disabled) return;
+      btn.disabled=true; btn.textContent="Sending";
       const id=+el.dataset.id;
+      const res=await sbPost("dump_replies",{dump_id:id,body:v});
+      if(!res){ btn.disabled=false; btn.textContent="Reply";
+        el.querySelector(".said").textContent="Not sent, try again"; return; }
       DUMPS=DUMPS.map(d=>d.id===id?{...d,reply:v}:d);
-      await sbPost("dump_replies",{dump_id:id,body:v});
       drawDumps();
       const again=document.querySelector(`#alldumps .d[data-id="${id}"]`);
-      if(again) again.classList.add("open");
+      if(again){ again.classList.add("open");
+        const s=again.querySelector(".said"); if(s) s.textContent="Sent"; }
     };
   });
 }
@@ -705,7 +820,15 @@ function drawMail(){
   $("#mail").innerHTML=MAIL.rows.map(m=>
     `<div class="mrw"><span>${m.label}</span><span class="n">${m.n}</span></div>`).join("");
   $("#verdict").textContent=MAIL.verdict;
+  const f=$("#flag"), a=MAIL.action||"none";
+  f.className="flag"+(a==="none"?"":" on "+a);
+  f.title={act:"Something needs a reply",read:"Worth reading",
+           good:"Good news in there",none:""}[a]||"";
 }
+$("#flag").onclick=()=>{
+  const t=document.getElementById("verdict");
+  if(t) t.scrollIntoView({behavior:"smooth",block:"center"});
+};
 drawMail();
 $("#foot").innerHTML=(SB.url?"Live from Supabase":"Seed data, not yet connected")+
   "<br>Last written by the evening brief";
@@ -958,6 +1081,178 @@ function drawWide(dumpRows, runRows){
   drawLatency(dumpRows||[]);
   drawTicks(runRows||[]);
 }
+/* =====================================================================
+   BLIP — the system's face.
+
+   Two layers of feeling:
+     AMBIENT   what it does when nothing is happening. Follows the clock.
+     REACTION  what the data makes it feel. Overrides ambient, then decays.
+
+   Priority runs worst-first: fear beats boredom, always.
+   ===================================================================== */
+
+const AMBIENT = [
+  { from:23, to:5,  state:"sleeping" },
+  { from:5,  to:7,  state:"waking"   },
+  { from:7,  to:10, state:"idle"     },
+  { from:10, to:17, state:"working"  },
+  { from:17, to:21, state:"idle"     },
+  { from:21, to:23, state:"drowsy"   }
+];
+
+function ambientState(){
+  const h=new Date().getHours();
+  const band=AMBIENT.find(b=> b.from<b.to ? (h>=b.from&&h<b.to) : (h>=b.from||h<b.to));
+  return band ? band.state : "idle";
+}
+
+/* reaction ladder — first match wins */
+function reactionState(){
+  const gapDays = Math.ceil((new Date(NEXT.d)-T)/864e5);
+  const unanswered = DUMPS.filter(d=>d.wait).length;
+  const codedToday = LANES[0].days.includes(kk(T));
+  const lastRunOk = RUNSTATE.ok, lastRunAge = RUNSTATE.hours;
+
+  if(gapDays<=0)                 return ["scared",  "a deadline is today or past"];
+  if(lastRunOk===false)          return ["angry",   "the last brief failed"];
+  if(lastRunAge>20)              return ["confused","no brief has run in a day"];
+  if(CELEBRATE)                  return ["celebrate", CELEBRATE];
+  if(gapDays<=2)                 return ["surprised","a deadline is inside two days"];
+  if(DUPES>3)                    return ["suspicious","duplicate dumps in the record"];
+  if(lastGap>=4)                 return ["sad",     "four days without code"];
+  if(unanswered>2)               return ["curious", "dumps waiting for an answer"];
+  if(iceDone()>0&&BANKED>0)      return ["proud",   "marks and activities are moving"];
+  if(codedToday&&streak>=3)      return ["happy",   "a run going and today counted"];
+  if(codedToday)                 return ["playful", "coded today"];
+  if(unanswered===0&&DUMPS.length<3) return ["bored","nothing has come in"];
+  return [null,null];
+}
+
+let RUNSTATE={ok:null,hours:99}, DUPES=0, BANKED=0, CELEBRATE=null;
+
+/* the rare ones — seven days running, a module's activities complete,
+   or a submission actually banked */
+function checkCelebrate(){
+  if(streak>=7) return `${streak} days of code without a break`;
+  const full=SUBJECTS.find(s=>s.acts && s.acts.every(a=>a===1));
+  if(full) return `${full.m} activities all four done`;
+  const fresh=SUBJECTS.find(s=>(s.got||[]).length>0);
+  if(fresh && BANKED>0) return "a mark is on the board";
+  return null;
+}
+let blip=null, blipState=null, holdTimer=null, saying=null, sayIndex=0;
+
+/* fallback observations — replaced by os.observations when it answers */
+let OBS=[
+  {slot:"work",state:"thinking",body:"Nothing has been written about your work yet. The brief fills this in on its next run."},
+  {slot:"practice",state:"idle",body:"No practice reading yet."},
+  {slot:"system",state:"idle",body:"No system reading yet."}
+];
+
+async function bootBlip(){
+  try{
+    const [{createAvatar}, def] = await Promise.all([
+      import("https://esm.sh/@bible-strong/avatar-web@0.1.0"),
+      fetch("./blip.avatar.json").then(r=>r.json())
+    ]);
+    DEF = def;
+    tintBlip(def);
+    blip = createAvatar("#avatar", { definition:def, size:"100%" });
+    settle();
+  }catch(err){
+    document.getElementById("rail").style.display="none";
+  }
+}
+let DEF=null;
+
+/* Blip wears the page's ink, not its own magenta */
+function tintBlip(def){
+  const css=getComputedStyle(document.documentElement);
+  def.colors.body = dark ? "#E6E4DE" : "#2A2C31";
+  def.colors.eyes = dark ? "#141518" : "#F1EFE9";
+}
+
+/* pick and play the right feeling */
+function settle(){
+  if(!blip) return;
+  const [react,reason] = reactionState();
+  const next = react || ambientState();
+  const node = document.getElementById("blip");
+  node.classList.add("awake");
+  node.classList.toggle("alert", ["scared","angry","confused","sad"].includes(next));
+  node.title = reason ? `Blip: ${reason}` : `Blip is ${next}`;
+  if(next!==blipState){ blipState=next; try{ blip.play(next); }catch{} }
+}
+setInterval(settle, 60000);
+
+/* ---------- speech ---------- */
+const sayBox=$("#say"), bub=$("#bub");
+
+function speak(i){
+  const o=OBS[i]; if(!o) return;
+  sayIndex=i; saying=o;
+  $("#saystate").textContent=o.state;
+  $("#saynum").textContent=`${i+1} of ${OBS.length}`;
+  $("#saytxt").textContent=o.body;
+  $("#sayhint").textContent = i<OBS.length-1
+    ? "Tap Blip for the next one · hold to reply"
+    : "Hold to reply";
+  sayBox.classList.add("on");
+  if(blip){ blipState=o.state; try{ blip.play(o.state); }catch{} }
+}
+function hush(){
+  sayBox.classList.remove("on"); saying=null; sayIndex=0;
+  bub.classList.remove("held"); settle();
+}
+
+/* double tap opens, single tap advances while open */
+let tapCount=0, tapTimer=null;
+const node=$("#blip");
+node.addEventListener("click", ()=>{
+  if(sayBox.classList.contains("on")){
+    if(sayIndex<OBS.length-1) speak(sayIndex+1); else hush();
+    return;
+  }
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer=setTimeout(()=>{ tapCount=0; }, 320);
+  if(tapCount===2){ tapCount=0; clearTimeout(tapTimer); speak(0); }
+});
+node.addEventListener("keydown", e=>{
+  if(e.key==="Enter"||e.key===" "){ e.preventDefault();
+    sayBox.classList.contains("on") ? hush() : speak(0); }
+});
+
+/* tap anywhere off to dismiss */
+addEventListener("pointerdown", e=>{
+  if(!sayBox.classList.contains("on")) return;
+  if(node.contains(e.target)||sayBox.contains(e.target)) return;
+  hush();
+}, true);
+
+/* hold the bubble to reply — a reply is what makes an observation permanent */
+function startHold(){
+  if(!saying) return;
+  bub.classList.add("held");
+  holdTimer=setTimeout(()=>{
+    bub.classList.remove("held");
+    REPLY_TO=saying;
+    txt.value="";
+    $("#sheetq").textContent=saying.body;
+    $("#sheetq").style.display="block";
+    $("#sheeth").textContent="Replying to Blip";
+    hush(); open();
+  }, 520);
+}
+function endHold(){ clearTimeout(holdTimer); bub.classList.remove("held"); }
+let REPLY_TO=null;
+bub.addEventListener("pointerdown", startHold);
+bub.addEventListener("pointerup", endHold);
+bub.addEventListener("pointerleave", endHold);
+bub.addEventListener("contextmenu", e=>e.preventDefault());
+
+bootBlip();
+
 /* ---------------- navigation ---------------- */
 $("#todumps").onclick=()=>{document.body.classList.add("push");$("#s2").scrollTop=0;scrollTo(0,0)};
 $("#back").onclick=()=>document.body.classList.remove("push");
@@ -969,25 +1264,50 @@ const open=()=>{sheet.classList.add("on");scrim.classList.add("on");setTimeout((
 const shut=()=>{sheet.classList.remove("on");scrim.classList.remove("on")};
 $("#newdump").onclick=open; $("#cancel").onclick=shut; scrim.onclick=shut;
 $("#send").onclick=async()=>{
-  const v=txt.value.trim(); if(!v) return;
-  const res=await sbPost("dumps",{body:v,source:"app"});
-  if(res){ $("#hint").textContent="Saved."; txt.value=""; setTimeout(shut,500); }
-  else{
+  const btn=$("#send"), v=txt.value.trim();
+  if(!v || btn.disabled) return;
+  btn.disabled=true; btn.textContent="Sending";
+
+  const res = REPLY_TO && REPLY_TO.id
+    ? await sbRpc("reply_to_observation", {obs_id:REPLY_TO.id, note:v})
+    : await sbPost("dumps", {body:v, source:"app"});
+
+  if(res!==null){
+    btn.textContent="Saved";
+    $("#hint").textContent="It will be answered on the next brief.";
+    txt.value=""; REPLY_TO=null;
+    if(blip){ blipState="happy"; try{ blip.play("happy"); }catch{} }
+    setTimeout(()=>{
+      shut(); btn.disabled=false; btn.textContent="Send";
+      $("#hint").textContent="Goes straight to Brain";
+      $("#sheetq").style.display="none";
+      $("#sheeth").textContent="What's on your mind?";
+      settle();
+    }, 900);
+  }else{
     try{ await navigator.clipboard.writeText(v);
-      $("#hint").textContent="No connection yet. Copied instead."; }
-    catch{ $("#hint").textContent="No connection yet. Copy it manually."; }
+      $("#hint").textContent="No connection. Copied instead."; }
+    catch{ $("#hint").textContent="No connection. Copy it manually."; }
+    btn.disabled=false; btn.textContent="Send";
   }
 };
 
 /* ---------------- live data ---------------- */
 (async()=>{
-  const [m,d,s,r,p] = await Promise.all([
+  const [m,d,s,r,p,o] = await Promise.all([
     sbGet("mail_summary","select=*&order=captured_at.desc&limit=1"),
     sbGet("dumps","select=*,dump_replies(body)&order=captured_at.desc&limit=40"),
     sbGet("subjects","select=*&order=code"),
     sbGet("runs","select=*&order=ran_at.desc&limit=1"),
-    sbGet("practice","select=*&order=day.desc&limit=120")
+    sbGet("practice","select=*&order=day.desc&limit=120"),
+    sbGet("observations","select=*&order=created_at.desc&limit=3")
   ]);
+
+  if(o&&o.length){
+    const order={work:0,practice:1,system:2};
+    OBS=o.sort((a,b)=>order[a.slot]-order[b.slot])
+         .map(x=>({id:x.id,slot:x.slot,state:x.state,body:x.body}));
+  }
 
   if(p&&p.length){
     const key=x=>+x.day.replace(/-/g,"");
@@ -999,12 +1319,20 @@ $("#send").onclick=async()=>{
     drawPractice();
   }
 
-  if(m&&m[0]){ MAIL={rows:m[0].rows,verdict:m[0].verdict}; drawMail(); }
+  if(m&&m[0]){ MAIL={rows:m[0].rows,verdict:m[0].verdict,action:m[0].action||"none"};
+    drawMail(); }
 
   if(d&&d.length){
+    const obsById={};
+    (await sbGet("observations","select=id,body,state&limit=60")||[])
+      .forEach(x=>obsById[x.id]=x);
     DUMPS=d.map(x=>({id:x.id,
-      at:new Date(x.captured_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"}),
+      at:new Date(x.captured_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})+
+         " " + new Date(x.captured_at).toLocaleTimeString("en-GB",
+         {hour:"2-digit",minute:"2-digit"}),
       k:x.answer?(x.kind||"Note"):"Waiting", wait:!x.answer,
+      frm:x.source==="blip",
+      quote:x.in_reply_to&&obsById[x.in_reply_to]?obsById[x.in_reply_to].body:null,
       sum:x.summary||x.body, more:x.answer||"Not answered yet.",
       reply:x.dump_replies?.[0]?.body||null}));
     drawDumps();
@@ -1027,9 +1355,21 @@ $("#send").onclick=async()=>{
   const dot=$("#pulse");
   if(r&&r[0]){
     const mins=(Date.now()-new Date(r[0].ran_at))/6e4;
+    RUNSTATE={ok:r[0].ok, hours:mins/60};
     dot.className="pulse "+(mins<16*60&&r[0].ok?"ok":"stale");
     dot.title=`Last run ${new Date(r[0].ran_at).toLocaleString("en-GB")}`;
-  } else dot.className="pulse stale";
+  } else { RUNSTATE={ok:null,hours:99}; dot.className="pulse stale"; }
+
+  /* duplicate detection, so Blip can be suspicious about it */
+  if(d&&d.length){
+    const seen={}; DUPES=0;
+    d.forEach(x=>{ const k=(x.body||"").trim();
+      if(seen[k]) DUPES++; else seen[k]=1; });
+  }
+  BANKED=SUBJECTS.reduce((a,su)=>a+(su.got||[])
+    .reduce((x,g)=>x+g.w*g.mark/100,0),0);
+  CELEBRATE=checkCelebrate();
+  settle();
 
   $("#foot").innerHTML="Live from Supabase, os schema<br>"+
     (r&&r[0]?"Last written "+new Date(r[0].ran_at)
