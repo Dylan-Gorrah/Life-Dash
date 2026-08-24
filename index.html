@@ -693,7 +693,7 @@ function paint(){
 }
 paint(); $("#tog").onclick=()=>{
   dark=!dark; paint();
-  if(DEF && blip){ tintBlip(DEF); try{ blip.play(blipState||"idle"); }catch{} }
+  if(DEF) mountBlip();
 };
 
 /* ---------------- strip ---------------- */
@@ -1151,6 +1151,28 @@ let OBS=[
   {slot:"system",state:"idle",body:"No system reading yet."}
 ];
 
+/* Blip is procedural: one sphere plus two ellipses posed in 3D.
+   Colours live in three places — the definition root, and three
+   expressions that carry their own overrides. All must be re-tinted
+   or Blip flashes its stock orange mid-animation. */
+const OVERRIDES = {
+  "angry-brows": light => ({ body: light?"#B14A42":"#9E4F4A", eyes: light?"#EDEAE3":"#2A2C31" }),
+  "uneasy-left": light => ({ body: light?"#5A6B8C":"#6E82AD" }),
+  "playful-right": light => ({ eyes: light?"#FFFFFF":"#0E0F11" })
+};
+
+function tintBlip(def){
+  const light = !dark;
+  def.colors.body = light ? "#2A2C31" : "#E6E4DE";
+  def.colors.eyes = light ? "#F1EFE9" : "#141518";
+  for(const key in OVERRIDES){
+    if(def.expressions && def.expressions[key]){
+      def.expressions[key].colors =
+        Object.assign({}, def.expressions[key].colors, OVERRIDES[key](light));
+    }
+  }
+}
+
 async function bootBlip(){
   const rail=document.getElementById("rail");
   try{
@@ -1162,9 +1184,7 @@ async function bootBlip(){
       })
     ]);
     DEF = def;
-    tintBlip(def);
-    blip = createAvatar("#avatar", { definition:def, size:"100%" });
-    settle();
+    mountBlip();
   }catch(err){
     console.error("[blip]", err);
     rail.classList.add("broke");
@@ -1183,6 +1203,26 @@ async function bootBlip(){
            " Everything else on this page is working."}];
   }
 }
+
+/* colours are read when the avatar is built, so a theme change
+   means tearing it down and building it again */
+let AVATAR_FACTORY=null;
+async function mountBlip(){
+  if(!AVATAR_FACTORY) AVATAR_FACTORY=(await import("./blip-engine.js")).createAvatar;
+  if(blip){ try{ blip.destroy(); }catch{} blip=null; }
+  document.getElementById("avatar").innerHTML="";
+  tintBlip(DEF);
+  blip = AVATAR_FACTORY("#avatar", {
+    definition: DEF,
+    size: "100%",
+    defaultAnimation: blipState || ambientState(),
+    autoplay: true,
+    ariaLabel: "Blip",
+    onError: e => console.error("[blip runtime]", e)
+  });
+  blipState=null;
+  settle();
+}
 let DEF=null;
 
 /* Blip wears the page's ink, not its own magenta */
@@ -1190,6 +1230,16 @@ function tintBlip(def){
   const css=getComputedStyle(document.documentElement);
   def.colors.body = dark ? "#E6E4DE" : "#2A2C31";
   def.colors.eyes = dark ? "#141518" : "#F1EFE9";
+}
+
+function play(state){
+  if(!blip) return;
+  const r = blip.play(state);
+  if(r && r.ok === false){
+    console.warn("[blip] cannot play", state, r.error);
+    if(state!=="idle") { blipState="idle"; blip.play("idle"); return; }
+  }
+  blipState=state;
 }
 
 /* pick and play the right feeling */
@@ -1201,7 +1251,7 @@ function settle(){
   node.classList.add("awake");
   node.classList.toggle("alert", ["scared","angry","confused","sad"].includes(next));
   node.title = reason ? `Blip: ${reason}` : `Blip is ${next}`;
-  if(next!==blipState){ blipState=next; try{ blip.play(next); }catch{} }
+  if(next!==blipState) play(next);
 }
 setInterval(settle, 60000);
 
@@ -1218,7 +1268,7 @@ function speak(i){
     ? "Tap Blip for the next one · hold to reply"
     : "Hold to reply";
   sayBox.classList.add("on");
-  if(blip){ blipState=o.state; try{ blip.play(o.state); }catch{} }
+  play(o.state);
 }
 function hush(){
   sayBox.classList.remove("on"); saying=null; sayIndex=0;
@@ -1296,7 +1346,7 @@ $("#send").onclick=async()=>{
     btn.textContent="Saved";
     $("#hint").textContent="It will be answered on the next brief.";
     txt.value=""; REPLY_TO=null;
-    if(blip){ blipState="happy"; try{ blip.play("happy"); }catch{} }
+    play("happy");
     setTimeout(()=>{
       shut(); btn.disabled=false; btn.textContent="Send";
       $("#hint").textContent="Goes straight to Brain";
