@@ -1606,27 +1606,45 @@
       "steps": [
         {
           "expression": "surprised-left",
-          "holdMs": 2300,
-          "transitionMs": 500,
-          "transition": "smooth"
+          "holdMs": 620,
+          "transitionMs": 110,
+          "transition": "snappy"
+        },
+        {
+          "expression": "uneasy-left",
+          "holdMs": 380,
+          "transitionMs": 150,
+          "transition": "snappy"
         },
         {
           "expression": "surprised-wide-left",
-          "holdMs": 2300,
-          "transitionMs": 500,
-          "transition": "smooth"
+          "holdMs": 520,
+          "transitionMs": 100,
+          "transition": "snappy"
+        },
+        {
+          "expression": "wide-down-left",
+          "holdMs": 420,
+          "transitionMs": 140,
+          "transition": "snappy"
+        },
+        {
+          "expression": "surprised-left",
+          "holdMs": 300,
+          "transitionMs": 90,
+          "transition": "snappy"
         }
       ],
       "blink": {
         "enabled": true,
-        "initialDelayMs": 1200,
-        "minIntervalMs": 1800,
-        "maxIntervalMs": 3600,
-        "durationMs": 220
+        "initialDelayMs": 600,
+        "minIntervalMs": 900,
+        "maxIntervalMs": 2200,
+        "durationMs": 170
       },
       "metadata": {
         "label": "scared",
-        "description": "Cet état enchaîne un pool de presets et des clignements.",
+        "description": "Fast, hard-cut flinching. Wide, shrink, dart down.",
         "group": "Réactions"
       }
     },
