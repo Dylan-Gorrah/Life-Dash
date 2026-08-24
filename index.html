@@ -1156,19 +1156,23 @@ let OBS=[
    expressions that carry their own overrides. All must be re-tinted
    or Blip flashes its stock orange mid-animation. */
 const OVERRIDES = {
-  "angry-brows": light => ({ body: light?"#B14A42":"#9E4F4A", eyes: light?"#EDEAE3":"#2A2C31" }),
-  "uneasy-left": light => ({ body: light?"#5A6B8C":"#6E82AD" }),
-  "playful-right": light => ({ eyes: light?"#FFFFFF":"#0E0F11" })
+  "angry-brows": light => ({ body: light?"#b14a42":"#9e4f4a", eyes: light?"#edeae3":"#2a2c31" }),
+  "uneasy-left": light => ({ body: light?"#5a6b8c":"#6e82ad" }),
+  "playful-right": light => ({ eyes: light?"#ffffff":"#0e0f11" })
 };
 
 function tintBlip(def){
   const light = !dark;
-  def.colors.body = light ? "#2A2C31" : "#E6E4DE";
-  def.colors.eyes = light ? "#F1EFE9" : "#141518";
+  /* the schema demands lowercase six-digit hex — uppercase fails validation */
+  const hex = v => String(v).toLowerCase();
+  def.colors.body = hex(light ? "#2a2c31" : "#e6e4de");
+  def.colors.eyes = hex(light ? "#f1efe9" : "#141518");
   for(const key in OVERRIDES){
     if(def.expressions && def.expressions[key]){
+      const o = OVERRIDES[key](light);
+      for(const k in o) o[k] = hex(o[k]);
       def.expressions[key].colors =
-        Object.assign({}, def.expressions[key].colors, OVERRIDES[key](light));
+        Object.assign({}, def.expressions[key].colors, o);
     }
   }
 }
@@ -1224,13 +1228,6 @@ async function mountBlip(){
   settle();
 }
 let DEF=null;
-
-/* Blip wears the page's ink, not its own magenta */
-function tintBlip(def){
-  const css=getComputedStyle(document.documentElement);
-  def.colors.body = dark ? "#E6E4DE" : "#2A2C31";
-  def.colors.eyes = dark ? "#141518" : "#F1EFE9";
-}
 
 function play(state){
   if(!blip) return;
