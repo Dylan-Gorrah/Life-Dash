@@ -21,12 +21,6 @@
   --margin:#C0605A; --pen:#2F4B8F;
   --amber:#A8763A; --green:#4A7350;
   --grain:.05; --blend:multiply;
-  /* sampled from a real spring, stiffness 200 damping 17.5, 8% overshoot */
-  --spring:linear(0, 0.0444, 0.1538, 0.298, 0.4536, 0.604, 0.7384, 0.8507,
-    0.9389, 1.0034, 1.0466, 1.0718, 1.0829, 1.0834, 1.0768, 1.066, 1.0532,
-    1.0402, 1.028, 1.0175, 1.009, 1.0025, 0.9979, 0.9949, 0.9934, 0.9929,
-    0.9932, 0.9939, 1);
-  --exit:cubic-bezier(.4,0,.9,.55);
 }
 [data-theme="dark"]{
   --paper:#141518; --paper-2:#1B1D21; --sunk:rgba(230,228,222,.04);
@@ -219,55 +213,24 @@ body.push #s2{transform:translateX(0);visibility:visible;transition-delay:0s}
 .blip.alert .halo{border-color:var(--margin);animation:ha 2.6s ease-in-out infinite}
 @keyframes ha{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(1.05)}}
 
-/* speech — springs out of Blip, settles, fades back into him */
+/* speech */
 .say{position:fixed;z-index:33;right:104px;top:50%;transform:translateY(-50%);
   width:min(330px,calc(100vw - 132px));pointer-events:none}
 .say.on{pointer-events:auto}
-
-/* the trail: two beads that pop before the bubble, so it reads as his thought */
-.bead{position:absolute;right:-16px;border-radius:50%;background:var(--paper-2);
-  border:1px solid var(--rule);opacity:0;transform:scale(.2);
-  transition:opacity .18s ease,transform .34s var(--spring)}
-.bead.b1{width:7px;height:7px;top:calc(50% + 8px);right:-22px;transition-delay:.02s}
-.bead.b2{width:4px;height:4px;top:calc(50% + 17px);right:-32px;transition-delay:0s}
-.say.on .bead{opacity:1;transform:scale(1)}
-.say.on .bead.b1{transition-delay:.06s}
-.say.on .bead.b2{transition-delay:.01s}
-
-.bub{background:var(--paper-2);border:1px solid var(--rule);
-  padding:16px 17px 14px;border-radius:20px;position:relative;
-  box-shadow:0 2px 6px rgba(0,0,0,.05), 0 18px 44px -12px rgba(0,0,0,.22);
-  backdrop-filter:blur(14px) saturate(1.2);
-  -webkit-backdrop-filter:blur(14px) saturate(1.2);
-  transform-origin:calc(100% + 26px) 60%;
-  opacity:0;transform:scale(.62) translateX(14px);
-  transition:opacity .2s ease .06s,
-             transform .63s var(--spring) .06s,
-             background .5s,border-color .5s}
+.bub{background:var(--paper-2);border:1px solid var(--rule);padding:15px 16px 13px;
+  box-shadow:0 16px 44px rgba(0,0,0,.20);position:relative;
+  opacity:0;transform:translateX(10px) scale(.97);transform-origin:right center;
+  transition:opacity .34s ease,transform .44s cubic-bezier(.32,.72,0,1)}
 .say.on .bub{opacity:1;transform:none}
-
-/* leaving is quicker and does not bounce — collapses back toward him */
-.say:not(.on) .bub{
-  transition:opacity .16s ease, transform .26s var(--exit)}
-.say:not(.on) .bead{transition:opacity .12s ease,transform .2s var(--exit)}
-
-.bub::after{content:"";position:absolute;right:-5px;top:60%;margin-top:-5px;
-  width:11px;height:11px;background:var(--paper-2);
+.bub::after{content:"";position:absolute;right:-6px;top:50%;margin-top:-5px;
+  width:10px;height:10px;background:var(--paper-2);
   border-right:1px solid var(--rule);border-top:1px solid var(--rule);
-  border-radius:0 4px 0 0;transform:rotate(45deg)}
-
-.bub .who{display:flex;justify-content:space-between;color:var(--ink-3);margin-bottom:10px;
-  opacity:0;transform:translateY(3px);
-  transition:opacity .3s ease .16s,transform .4s var(--spring) .16s}
+  transform:rotate(45deg)}
+.bub .who{display:flex;justify-content:space-between;color:var(--ink-3);margin-bottom:9px}
 .bub .txt{font-family:Spectral,Georgia,serif;font-weight:300;font-size:15.5px;
-  line-height:1.55;margin:0;letter-spacing:-.005em;
-  opacity:0;transform:translateY(4px);
-  transition:opacity .34s ease .2s,transform .46s var(--spring) .2s}
-.bub .hint{margin-top:12px;padding-top:10px;border-top:1px solid var(--rule-soft);
-  color:var(--ink-3);opacity:0;
-  transition:opacity .3s ease .3s,color .3s}
-.say.on .bub .who,.say.on .bub .txt{opacity:1;transform:none}
-.say.on .bub .hint{opacity:.65}
+  line-height:1.5;margin:0}
+.bub .hint{margin-top:11px;padding-top:9px;border-top:1px solid var(--rule-soft);
+  color:var(--ink-3);opacity:.7;transition:color .3s,opacity .3s}
 .bub.held .hint{color:var(--pen);opacity:1}
 .bub .prog{position:absolute;left:0;bottom:0;height:2px;background:var(--pen);
   width:0;transition:width .05s linear}
@@ -279,15 +242,11 @@ body.push #s2{transform:translateX(0);visibility:visible;transition-delay:0s}
 }
 @media (max-width:520px){
   .blip{width:50px;height:50px}
-  .say{right:0;left:0;top:auto;bottom:92px;transform:none;
+  .say{right:0;left:0;top:auto;bottom:96px;transform:none;
        width:auto;margin:0 16px}
-  /* springs up out of Blip, who sits at the right edge */
-  .bub{transform-origin:calc(100% - 14px) calc(100% + 30px);
-       transform:scale(.62) translate(10px,16px);border-radius:22px}
-  .bub::after{right:24px;top:auto;bottom:-5px;margin-top:0;
-    border-radius:0 4px 0 0;transform:rotate(135deg)}
-  .bead.b1{top:auto;bottom:-18px;right:14px}
-  .bead.b2{top:auto;bottom:-30px;right:4px}
+  .bub{transform:translateY(10px) scale(.98);transform-origin:bottom center}
+  .bub::after{right:26px;top:auto;bottom:-6px;margin-top:0;
+    transform:rotate(135deg)}
 }
 body.push .rail,body.push .say{opacity:0;pointer-events:none;transition:opacity .3s}
 
@@ -574,8 +533,6 @@ body.push .dock{opacity:0;pointer-events:none}
 </div>
 
 <div class="say" id="say" aria-live="polite">
-  <i class="bead b1"></i>
-  <i class="bead b2"></i>
   <div class="bub" id="bub">
     <div class="who mono"><span id="saystate"></span><span id="saynum"></span></div>
     <p class="txt" id="saytxt"></p>
@@ -716,14 +673,15 @@ let MAIL={ rows:[
   action:"none" };
 
 /* ---------------- helpers ---------------- */
+addEventListener("error",()=>document.querySelectorAll(".rv").forEach(e=>e.classList.add("in")));
 const $=s=>document.querySelector(s);
 const T=new Date();
 const kk=d=>d.getFullYear()*1e4+(d.getMonth()+1)*100+d.getDate();
 const ad=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const WORDS=["zero","one","two","three","four","five","six","seven","eight","nine","ten",
 "eleven","twelve","thirteen","fourteen"];
-const word=n=>WORDS[n]||n;
-const cap=s=>s[0].toUpperCase()+s.slice(1);
+const word=n=>WORDS[n]||String(n);
+const cap=s=>{s=String(s??"");return s.charAt(0).toUpperCase()+s.slice(1)};
 
 /* ---------------- theme ---------------- */
 const SUN='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
